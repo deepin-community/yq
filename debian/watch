@@ -1,0 +1,6 @@
+version=4
+opts="mode=git, compression=gzip" \
+ https://github.com/kislyuk/yq.git \
+ refs/tags/[Vv]?(\d[\d\.]+) debian uupdate
+#opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/yq-$1\.tar\.gz/ \
+#  https://github.com/kislyuk/yq/tags .*/v(\d[\d.]*)\.tar\.gz
