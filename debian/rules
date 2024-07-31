@@ -1,4 +1,24 @@
 #!/usr/bin/make -f
+#export DH_VERBOSE = 1
+
+# Test not working at the moment
+export PYBUILD_DISABLE=test
 
 %:
-	dh $@
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_build:
+	dh_auto_build
+
+override_dh_auto_install:
+	dh_auto_install
+	export PYTHONPATH=$$(ls -d debian/yq/usr/lib/python3*/dist-packages | head -1); \
+	echo $${PYTHONPATH}; \
+	help2man -n "Command-line YAML processor - jq wrapper for YAML documents" debian/yq/usr/bin/yq > docs/yq.1;\
+	help2man -n "Command-line XML processor - jq wrapper for XML documents" debian/yq/usr/bin/xq > docs/xq-python.1;\
+	help2man -n "Command-line TOML processor - jq wrapper for TOML documents" debian/yq/usr/bin/tomlq > docs/tomlq.1
+	mv debian/yq/usr/bin/xq debian/yq/usr/bin/xq-python
+
+override_dh_auto_clean:
+	- dh_auto_clean
+	rm -rf yq.egg-info/ docs/*.1

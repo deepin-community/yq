@@ -1,5 +1,39 @@
-template-repository (1.0-1) unstable; urgency=medium
+yq (3.2.3-1) unstable; urgency=medium
 
-  * Initial release
+  * update watch file to git method
+  * New upstream version 3.2.3
+  * fix man page install (closes: #1064405)
 
- -- Tsic404 <liuheng@deepin.org>  Sat, 28 Jan 2023 13:46:49 +0800
+ -- Christoph Martin <martin@uni-mainz.de>  Thu, 14 Mar 2024 00:21:20 +0100
+
+yq (3.1.0-5) unstable; urgency=medium
+
+  * build and install man page (closes: #1064405)
+  * fix cleanup
+
+ -- Christoph Martin <martin@uni-mainz.de>  Mon, 26 Feb 2024 14:27:39 +0100
+
+yq (3.1.0-4) unstable; urgency=medium
+
+  * wrap-and-sort debian/* files
+
+ -- Christoph Martin <martin@uni-mainz.de>  Mon, 04 Sep 2023 16:01:24 +0200
+
+yq (3.1.0-3) unstable; urgency=medium
+
+  * rename xq to xq-python (closes: #1029509)
+
+ -- Christoph Martin <martin@uni-mainz.de>  Mon, 23 Jan 2023 17:28:55 +0100
+
+yq (3.1.0-2) unstable; urgency=medium
+
+  * fix package description
+  * source only upload
+
+ -- Christoph Martin <martin@uni-mainz.de>  Mon, 23 Jan 2023 00:36:41 +0100
+
+yq (3.1.0-1) unstable; urgency=low
+
+  * Initial release. Closes: #908117
+
+ -- Christoph Martin <martin@uni-mainz.de>  Wed, 18 Jan 2023 15:42:42 +0100
