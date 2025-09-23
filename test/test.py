@@ -195,7 +195,7 @@ class TestYq(unittest.TestCase):
             self.assertEqual(tf.read(), b"foo\n...\n")
             self.assertEqual(tf2.read(), b"foo\n...\n")
 
-            # Files do not get overwritten on error (DeferredOutputStream logic)
+            # Files do not get overwritten on error
             self.run_yq("", ["-i", "-y", tf.name, tf2.name], expect_exit_codes=[3])
             tf.seek(0)
             tf2.seek(0)
@@ -294,6 +294,9 @@ class TestYq(unittest.TestCase):
             self.run_yq("a: &b\n  c: d\ne:\n  <<: *b\n  g: h", ["-y", "."]), "a:\n  c: d\ne:\n  c: d\n  g: h\n"
         )
 
+    def test_yaml_floats(self):
+        self.assertEqual(self.run_yq("test: 0.0004", ["-y", "."]), "test: 0.0004\n")
+
     def test_yaml_1_2(self):
         self.assertEqual(self.run_yq("11:12:13", ["."]), "")
         self.assertEqual(self.run_yq("11:12:13", ["-y", "."]), "'11:12:13'\n")
@@ -317,6 +320,7 @@ class TestYq(unittest.TestCase):
 
     def test_yaml_1_1_octals(self):
         self.assertEqual(self.run_yq("on: -012345", ["-y", "."]), "'on': -5349\n")
+        self.assertEqual(self.run_yq("on: '0900'", ["-y", "."]), "'on': '0900'\n")
 
     @unittest.expectedFailure
     def test_yaml_1_2_octals(self):

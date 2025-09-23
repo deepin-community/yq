@@ -1,3 +1,39 @@
+Changes for v3.4.3 (2024-04-27)
+===============================
+
+Finish migration to setuptools_scm
+
+Changes for v3.4.2 (2024-04-26)
+===============================
+
+Constrain setuptools_scm version
+
+Changes for v3.4.1 (2024-04-17)
+===============================
+
+-  Add module entry points for xq and tomlq
+
+Changes for v3.4.0 (2024-04-17)
+===============================
+
+-  yq -y: Induce quoting of string scalars that start with 08 and 09
+
+Changes for v3.3.1 (2024-04-15)
+===============================
+
+Revert “Do not interpret characters that cannot be parsed in octal as
+int (#176)”
+
+Changes for v3.3.0 (2024-04-13)
+===============================
+
+-  tomlq: Use tomllib on Python 3.11 when not round-tripping
+
+-  xq: Support in-place XML editing
+
+-  Do not interpret characters that cannot be parsed in octal as int
+   (#176)
+
 Changes for v3.2.3 (2023-09-09)
 ===============================
 
