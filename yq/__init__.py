@@ -42,36 +42,23 @@ def decode_docs(jq_output, json_decoder):
         yield doc
 
 
+def get_toml_loader():
+    if sys.version_info >= (3, 11):
+        import tomllib
+
+        return tomllib.loads
+    else:
+        import tomlkit
+
+        return tomlkit.parse
+
+
 def xq_cli():
     cli(input_format="xml", program_name="xq")
 
 
 def tq_cli():
     cli(input_format="toml", program_name="tomlq")
-
-
-class DeferredOutputStream:
-    def __init__(self, name, mode="w"):
-        self.name = name
-        self.mode = mode
-        self._fh = None
-
-    @property
-    def fh(self):
-        if self._fh is None:
-            self._fh = open(self.name, self.mode)
-        return self._fh
-
-    def flush(self):
-        if self._fh is not None:
-            return self.fh.flush()
-
-    def close(self):
-        if self._fh is not None:
-            return self.fh.close()
-
-    def __getattr__(self, a):
-        return getattr(self.fh, a)
 
 
 def cli(args=None, input_format="yaml", program_name="yq"):
@@ -131,8 +118,8 @@ def cli(args=None, input_format="yaml", program_name="yq"):
 
     yq_args = dict(input_format=input_format, program_name=program_name, jq_args=jq_args, **vars(args))
     if in_place:
-        if args.output_format not in {"yaml", "annotated_yaml", "toml"}:
-            sys.exit("{}: -i/--in-place can only be used with -y/-Y/-t".format(program_name))
+        if args.output_format not in {"yaml", "annotated_yaml", "toml", "xml"}:
+            sys.exit("{}: -i/--in-place can only be used with -y/-Y/-t/-x".format(program_name))
         input_streams = yq_args.pop("input_streams")
         if len(input_streams) == 1 and input_streams[0].name == "<stdin>":
             msg = "{}: -i/--in-place can only be used with filename arguments, not on standard input"
@@ -145,7 +132,11 @@ def cli(args=None, input_format="yaml", program_name="yq"):
 
             if i < len(input_streams):
                 yq_args["exit_func"] = exit_handler
-            yq(input_streams=[input_stream], output_stream=DeferredOutputStream(input_stream.name), **yq_args)
+
+            with io.StringIO() as out_fh:
+                yq(input_streams=[input_stream], output_stream=out_fh, **yq_args)
+                with open(input_stream.name, "w") as fh:
+                    fh.write(out_fh.getvalue())
     else:
         yq(**yq_args)
 
@@ -217,6 +208,8 @@ def yq(
         msg = "{}: Error starting jq: {}: {}. Is jq installed and available on PATH?"
         exit_func(msg.format(program_name, type(e).__name__, e))
 
+    assert jq.stdin is not None  # this is to keep mypy happy
+
     try:
         if converting_output:
             # TODO: enable true streaming in this branch (with asyncio, asyncproc, a multi-shot variant of
@@ -246,18 +239,18 @@ def yq(
                     if xml_item_depth != 0:
                         raise Exception("xml_item_depth is not supported with xq -x")
 
-                    doc = xmltodict.parse(
+                    xml_doc = xmltodict.parse(
                         input_stream.buffer if isinstance(input_stream, io.TextIOWrapper) else input_stream.read(),
                         disable_entities=True,
                         force_list=xml_force_list,
                     )
-                    json.dump(doc, json_buffer, cls=JSONDateTimeEncoder)
+                    json.dump(xml_doc, json_buffer, cls=JSONDateTimeEncoder)
                     json_buffer.write("\n")
                 elif input_format == "toml":
                     import tomlkit
 
-                    doc = tomlkit.load(input_stream)  # type: ignore
-                    json.dump(doc, json_buffer, cls=JSONDateTimeEncoder)
+                    toml_doc = tomlkit.load(input_stream)
+                    json.dump(toml_doc, json_buffer, cls=JSONDateTimeEncoder)
                     json_buffer.write("\n")
                 else:
                     raise Exception("Unknown input format")
@@ -284,7 +277,7 @@ def yq(
 
                 for doc in decode_docs(jq_out, json_decoder):
                     if xml_root:
-                        doc = {xml_root: doc}  # type: ignore
+                        doc = {xml_root: doc}
                     elif not isinstance(doc, dict):
                         msg = (
                             "{}: Error converting JSON to XML: cannot represent non-object types at top level. "
@@ -301,7 +294,7 @@ def yq(
                             raise Exception(str(e) + " Use --xml-root=name to envelope your output with a root element")
                         else:
                             raise
-                    output_stream.write(b"\n" if sys.version_info < (3, 0) else "\n")
+                    output_stream.write("\n")
             elif output_format == "toml":
                 import tomlkit
 
@@ -310,6 +303,8 @@ def yq(
                         msg = "{}: Error converting JSON to TOML: cannot represent non-object types at top level."
                         exit_func(msg.format(program_name))
                     tomlkit.dump(doc, output_stream)
+            else:
+                raise Exception("Unknown output format")
         else:
             if input_format == "yaml":
                 loader_class = get_loader(
@@ -329,31 +324,32 @@ def yq(
                 import xmltodict
 
                 def emit_entry(path, entry):
-                    json.dump(entry, jq.stdin)  # type: ignore
-                    jq.stdin.write("\n")  # type: ignore
+                    assert jq.stdin is not None  # this is to keep mypy happy
+                    json.dump(entry, jq.stdin)
+                    jq.stdin.write("\n")
                     return True
 
                 for input_stream in input_streams:
-                    doc = xmltodict.parse(
+                    xml_doc = xmltodict.parse(
                         input_stream.buffer if isinstance(input_stream, io.TextIOWrapper) else input_stream.read(),
                         disable_entities=True,
                         force_list=xml_force_list,
                         item_depth=xml_item_depth,
                         item_callback=emit_entry,
                     )
-                    if doc:
-                        emit_entry(None, doc)
+                    if xml_doc:
+                        emit_entry(None, xml_doc)
             elif input_format == "toml":
-                import tomlkit
-
+                toml_loader = get_toml_loader()
                 for input_stream in input_streams:
-                    json.dump(tomlkit.load(input_stream), jq.stdin, cls=JSONDateTimeEncoder)  # type: ignore
-                    jq.stdin.write("\n")  # type: ignore
+                    toml_doc = toml_loader(input_stream.read())
+                    json.dump(toml_doc, jq.stdin, cls=JSONDateTimeEncoder)
+                    jq.stdin.write("\n")
             else:
                 raise Exception("Unknown input format")
 
             try:
-                jq.stdin.close()  # type: ignore
+                jq.stdin.close()
             except Exception:
                 pass
             jq.wait()

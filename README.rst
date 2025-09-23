@@ -103,6 +103,8 @@ parses this metadata, re-applies the tags and styles, and discards the extra pai
  4 entries instead of 2. A filter that expects all array entries to be mappings may break due to the presence of string
  metadata keys. Check your jq filter for compatibility/semantic validity when using the ``-Y`` option.
 
+yq does not support passing YAML comments into the JSON representation used by jq, or roundtripping such comments.
+
 XML support
 -----------
 ``yq`` also supports XML. The ``yq`` package installs an executable, ``xq``, which
@@ -112,13 +114,14 @@ the ``xq --xml-output``/``xq -x`` option. Multiple XML documents can be passed i
 ``xq a.xml b.xml``. Use ``--xml-item-depth`` to descend into large documents, streaming their contents without loading
 the full doc into memory (for example, stream a `Wikipedia database dump <https://dumps.wikimedia.org>`_ with
 ``cat enwiki-*.xml.bz2 | bunzip2 | xq . --xml-item-depth=2``). Entity expansion and DTD resolution is disabled to avoid
-XML parsing vulnerabilities.
+XML parsing vulnerabilities. Use ``python -m yq.xq`` if you want to ensure a specific Python runtime.
 
 TOML support
 ------------
 ``yq`` supports `TOML <https://toml.io/>`_ as well. The ``yq`` package installs an executable, ``tomlq``, which uses the
 `tomlkit library <https://github.com/sdispater/tomlkit>`_ to transcode TOML to JSON, then pipes it to ``jq``. Roundtrip
-transcoding is available with the ``tomlq --toml-output``/``tomlq -t`` option.
+transcoding is available with the ``tomlq --toml-output``/``tomlq -t`` option. Use ``python -m yq.tomlq`` if you want to
+ensure a specific Python runtime.
 
 .. admonition:: Compatibility note
 

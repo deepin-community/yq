@@ -1,3 +1,24 @@
+yq (3.4.3-2) unstable; urgency=medium
+
+  * Team Upload
+  * Update build-deps
+    - python3-toml
+    + jq
+    + python3-tomlkit
+  * Switch to DebHelper 13
+  * Enable tests & autopkgtests
+  * Add d/gbp.conf
+
+ -- Alexandre Detiste <tchet@debian.org>  Wed, 14 May 2025 20:08:45 +0200
+
+yq (3.4.3-1) unstable; urgency=medium
+
+  * New upstream version 3.4.3
+  * build depends on python3-setuptools-scm (closes: #1080904)
+  * bump standards version (no changes)
+
+ -- Christoph Martin <martin@uni-mainz.de>  Fri, 06 Sep 2024 14:44:32 +0200
+
 yq (3.2.3-1) unstable; urgency=medium
 
   * update watch file to git method
